@@ -27,6 +27,7 @@ class TasksController < ApplicationController
     end
 
   	if @task.save
+      logger.debug "task: #{@task.attributes.inspect}"
   	  redirect_to @task, notice: "タスク「#{@task.name}」を保存しました。"
     else
       render :new
