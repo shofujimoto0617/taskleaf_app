@@ -8,6 +8,8 @@ class Task < ApplicationRecord
 
   scope :recent, -> { order(created_at: :desc) }
 
+  paginates_per 50
+
   def self.ransackable_attributes(auto_object = nil)
   	%w[name created_at]
   end
