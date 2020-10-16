@@ -3,7 +3,17 @@ class TasksController < ApplicationController
   def index
   	# @tasks = current_user.tasks.recent
     @q = current_user.tasks.ransack(params[:q])
-    @tasks = @q.result(distinct: :true)
+    @tasks = @q.result(distinct: :true).page(params[:page])
+
+    respond_to do |format|
+      format.html
+      format.csv { send_data @tasks.generate_csv, filename: "tasks-#{Time.zone.now.strftime('%Y%m%d%S')}.csv" }
+    end
+  end
+
+  def import
+    current_user.tasks.import(params[:file])
+    redirect_to tasks_url, notice: "タスクを追加しました"
   end
 
   def show
@@ -29,6 +39,7 @@ class TasksController < ApplicationController
     end
 
   	if @task.save
+      TaskMailer.creation_email(@task).deliver_now
       logger.debug "task: #{@task.attributes.inspect}"
   	  redirect_to @task, notice: "タスク「#{@task.name}」を保存しました。"
     else
@@ -58,7 +69,7 @@ class TasksController < ApplicationController
   private
 
   def task_params
-  	params.require(:task).permit(:name, :description)
+  	params.require(:task).permit(:name, :description, :image)
   end
 
   def set_task
